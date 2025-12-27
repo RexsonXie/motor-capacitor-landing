@@ -1208,7 +1208,7 @@
 
             } catch (error) {
                 console.error('Error submitting form:', error);
-                alert('Failed to submit your inquiry. Please try again or contact us directly at sales@eperscapacitor.com');
+                alert('Error: ' + error.message + '\n\nPlease try again or contact us directly at sales@eperscapacitor.com');
                 submitBtn.textContent = originalBtnText;
                 submitBtn.disabled = false;
             }
