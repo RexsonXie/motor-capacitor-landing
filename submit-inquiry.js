@@ -2,18 +2,42 @@
 // Resend API Key: re_Wb6wExws_6bZtSDtaNp85tJTZt7Q8apVm
 
 module.exports = async (req, res) => {
+    // Enable CORS
+    res.setHeader('Access-Control-Allow-Credentials', true);
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+    res.setHeader(
+        'Access-Control-Allow-Headers',
+        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+    );
+
+    // Handle OPTIONS request
+    if (req.method === 'OPTIONS') {
+        res.status(200).end();
+        return;
+    }
+
     // Only allow POST requests
     if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed' });
+        return res.status(405).json({ error: 'Method not allowed', received: req.method });
     }
 
     try {
+        console.log('Received form submission');
+        console.log('Request body:', req.body);
+
         const { name, company, email, country, products, message } = req.body;
 
         // Validate required fields
         if (!name || !company || !email || !country || !products || !message) {
-            return res.status(400).json({ error: 'Missing required fields' });
+            console.log('Missing fields:', { name: !!name, company: !!company, email: !!email, country: !!country, products: !!products, message: !!message });
+            return res.status(400).json({
+                error: 'Missing required fields',
+                received: { name, company, email, country, products, message }
+            });
         }
+
+        console.log('Fields validated, preparing email...');
 
         // Prepare email content
         const productsList = Array.isArray(products) ? products.join(', ') : products;
@@ -36,7 +60,7 @@ module.exports = async (req, res) => {
             <body>
                 <div class="container">
                     <div class="header">
-                        <h2>🔔 New Inquiry from Landing Page</h2>
+                        <h2>New Inquiry from Landing Page</h2>
                     </div>
                     <div class="content">
                         <div class="field">
@@ -76,6 +100,8 @@ module.exports = async (req, res) => {
             </html>
         `;
 
+        console.log('Sending email via Resend API...');
+
         // Send email via Resend API
         const resendResponse = await fetch('https://api.resend.com/emails', {
             method: 'POST',
@@ -92,13 +118,16 @@ module.exports = async (req, res) => {
             }),
         });
 
+        console.log('Resend response status:', resendResponse.status);
+
         if (!resendResponse.ok) {
             const errorText = await resendResponse.text();
             console.error('Resend API Error:', errorText);
-            throw new Error('Failed to send email via Resend');
+            throw new Error(`Resend API failed: ${resendResponse.status} - ${errorText}`);
         }
 
         const resendData = await resendResponse.json();
+        console.log('Email sent successfully:', resendData);
 
         // Success response
         return res.status(200).json({
@@ -111,7 +140,7 @@ module.exports = async (req, res) => {
         console.error('Error processing inquiry:', error);
         return res.status(500).json({
             success: false,
-            error: 'Failed to process inquiry. Please try again.'
+            error: error.message || 'Failed to process inquiry'
         });
     }
 };
