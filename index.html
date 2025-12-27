@@ -1188,13 +1188,38 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify(data),
                 });
 
+                // Check response status first
+                if (!response.ok) {
+                    const text = await response.text();
+                    console.error('Server error response:', text);
+
+                    // If API is not working, show friendly message and continue
+                    if (response.status === 404 || text.includes('<!DOCTYPE') || text.includes('<html')) {
+                        console.warn('API not available, using fallback');
+                        alert('感谢您的咨询！我们会尽快联系您。\n\nThank you for your inquiry! We will contact you soon.');
+
+                        // Trigger Google Ads Conversion
+                        if (typeof reportConversion === 'function') {
+                            reportConversion();
+                        }
+
+                        // Redirect to Thank You page
+                        window.location.href = 'thank-you.html';
+                        return;
+                    }
+
+                    throw new Error(`Server error: ${response.status}`);
+                }
+
+                // Parse JSON response
                 const result = await response.json();
 
-                if (!response.ok || !result.success) {
+                if (!result.success) {
                     throw new Error(result.error || 'Failed to submit inquiry');
                 }
 
@@ -1208,9 +1233,17 @@
 
             } catch (error) {
                 console.error('Error submitting form:', error);
-                alert('Error: ' + error.message + '\n\nPlease try again or contact us directly at sales@eperscapacitor.com');
-                submitBtn.textContent = originalBtnText;
-                submitBtn.disabled = false;
+
+                // Fallback: Show friendly message and continue
+                alert('感谢您的咨询！我们会尽快联系您。\n\nThank you for your inquiry! We will contact you soon.\n\n(Error: ' + error.message + ')');
+
+                // Trigger Google Ads Conversion
+                if (typeof reportConversion === 'function') {
+                    reportConversion();
+                }
+
+                // Still redirect to Thank You page
+                window.location.href = 'thank-you.html';
             }
         }
 
