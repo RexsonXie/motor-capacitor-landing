@@ -1,7 +1,7 @@
 // Vercel Serverless Function for handling form submission
 // Resend API Key: re_Wb6wExws_6bZtSDtaNp85tJTZt7Q8apVm
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
     // Only allow POST requests
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
@@ -114,4 +114,4 @@ export default async function handler(req, res) {
             error: 'Failed to process inquiry. Please try again.'
         });
     }
-}
+};
