@@ -69,18 +69,31 @@ landpages/
 - Handles POST requests from the form
 - Validates input data
 - Sends formatted HTML email via Resend API
-- Resend API Key is already configured
+- Uses environment variables for sensitive data
 
 ### vercel.json
 - Configures Vercel to handle API routes
 - Maps `/api/*` requests to the `api/` folder
 
+## 🔑 Required Environment Variables
+
+Configure these in Vercel Dashboard → Project Settings → Environment Variables:
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `RESEND_API_KEY` | Your Resend.com API key | `re_xxxxxxxxxxxx` |
+| `TO_EMAIL` | Recipient email address | `sales@yourdomain.com` |
+| `FROM_EMAIL` | Sender email address (optional) | `noreply@yourdomain.com` |
+| `ALLOWED_ORIGINS` | Comma-separated allowed origins (optional) | `https://yourdomain.com` |
+
+**Note:** If `ALLOWED_ORIGINS` is not set, CORS will allow all origins (`*`).
+
 ## 📧 Email Settings (Resend)
 
 - **Service:** Resend.com
-- **API Key:** re_Wb6wExws_6bZtSDtaNp85tJTZt7Q8apVm
-- **Sender:** noreply@eperscapacitor.com
-- **Recipient:** sales@eperscapacitor.com
+- **API Key:** Configure in Vercel Environment Variables (RESEND_API_KEY)
+- **Sender:** noreply@eperscapacitor.com (configurable via FROM_EMAIL)
+- **Recipient:** sales@eperscapacitor.com (configurable via TO_EMAIL)
 
 ## ⚠️ Important Notes
 

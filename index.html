@@ -632,6 +632,28 @@
             color: #9ca3af;
         }
 
+        /* Form Message */
+        .form-message {
+            padding: 14px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 500;
+            display: none;
+        }
+
+        .form-message.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #34d399;
+        }
+
+        .form-message.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #f87171;
+        }
+
         /* FAQ */
         .faq {
             background: var(--light);
@@ -745,6 +767,44 @@
             .why-choose-grid {
                 grid-template-columns: 1fr;
             }
+
+            /* Touch-friendly buttons */
+            .btn {
+                min-height: 48px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            /* Touch-friendly checkboxes */
+            .checkbox-item input[type="checkbox"] {
+                min-width: 24px;
+                min-height: 24px;
+            }
+
+            /* Touch-friendly FAQ */
+            .faq-question {
+                min-height: 48px;
+                padding: 15px 20px;
+            }
+
+            /* Touch-friendly inputs */
+            .form-group input,
+            .form-group textarea,
+            .form-group select {
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+        }
+
+        /* Touch feedback for buttons */
+        @media (hover: none) and (pointer: coarse) {
+            .btn:active {
+                transform: scale(0.97);
+            }
+
+            .application-item:active {
+                transform: scale(0.97);
+            }
         }
     </style>
 </head>
@@ -765,7 +825,7 @@
                 <li>Fast quotation within 24 hours</li>
             </ul>
 
-            <a href="#inquiry-form" class="btn btn-primary">Get a Free Quotation from Manufacturer</a>
+            <a href="#inquiry-form" class="btn btn-primary" onclick="document.getElementById('inquiry-form').scrollIntoView({behavior: 'smooth', block: 'start'}); return false;">Get a Free Quotation from Manufacturer</a>
 
             <p class="trust-line">✓ Factory Direct | ✓ Fast Response | ✓ OEM Available</p>
 
@@ -856,7 +916,7 @@
                             <li>Compact structure, easy installation</li>
                             <li>Custom specifications available for different markets</li>
                         </ul>
-                        <a href="#inquiry-form" class="btn btn-secondary" onclick="selectProduct('CBB60')">Get Quote for CBB60 Capacitor</a>
+                        <a href="#inquiry-form" class="btn btn-secondary" onclick="selectProduct('CBB60'); document.getElementById('inquiry-form').scrollIntoView({behavior: 'smooth', block: 'start'}); return false;">Get Quote for CBB60 Capacitor</a>
                     </div>
                 </div>
 
@@ -872,7 +932,7 @@
                             <li>Dry type and oil-filled options available</li>
                             <li>OEM capacitance & voltage specifications supported</li>
                         </ul>
-                        <a href="#inquiry-form" class="btn btn-secondary" onclick="selectProduct('CBB61')">Get Quote for CBB61 Capacitor</a>
+                        <a href="#inquiry-form" class="btn btn-secondary" onclick="selectProduct('CBB61'); document.getElementById('inquiry-form').scrollIntoView({behavior: 'smooth', block: 'start'}); return false;">Get Quote for CBB61 Capacitor</a>
                     </div>
                 </div>
             </div>
@@ -885,7 +945,7 @@
             <p style="font-size: 18px; color: #92400e; margin-bottom: 15px; font-weight: 500;">
                 Not sure which model you need?
             </p>
-            <a href="#inquiry-form" style="display: inline-block; padding: 12px 28px; background: #f59e0b; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; transition: all 0.3s ease;">
+            <a href="#inquiry-form" style="display: inline-block; padding: 12px 28px; background: #f59e0b; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; transition: all 0.3s ease;" onclick="document.getElementById('inquiry-form').scrollIntoView({behavior: 'smooth', block: 'start'}); return false;">
                 → Ask Our Engineer for Recommendation
             </a>
         </div>
@@ -1140,7 +1200,7 @@
     <section class="final-cta">
         <div class="container">
             <h2>Looking for a Long-term Motor Run Capacitor Supplier?</h2>
-            <a href="#inquiry-form" class="btn">Contact Us Today for a Free Quote</a>
+            <a href="#inquiry-form" class="btn" onclick="document.getElementById('inquiry-form').scrollIntoView({behavior: 'smooth', block: 'start'}); return false;">Contact Us Today for a Free Quote</a>
         </div>
     </section>
 
@@ -1162,23 +1222,59 @@
             document.getElementById('prod-' + product.toLowerCase()).checked = true;
         }
 
+        // Show inline form message
+        function showFormMessage(message, isSuccess = true) {
+            let messageDiv = document.getElementById('form-message');
+            if (!messageDiv) {
+                messageDiv = document.createElement('div');
+                messageDiv.id = 'form-message';
+                const formContainer = document.querySelector('.form-container');
+                formContainer.insertBefore(messageDiv, formContainer.firstChild);
+            }
+            messageDiv.className = isSuccess ? 'form-message success' : 'form-message error';
+            messageDiv.textContent = message;
+            messageDiv.style.display = 'block';
+        }
+
+        // Clear form message
+        function clearFormMessage() {
+            const messageDiv = document.getElementById('form-message');
+            if (messageDiv) {
+                messageDiv.style.display = 'none';
+            }
+        }
+
+        // Set submit button loading state
+        function setSubmitButtonLoading(isLoading, button, originalText) {
+            if (isLoading) {
+                button.textContent = 'Sending...';
+                button.disabled = true;
+                button.style.opacity = '0.7';
+                button.style.cursor = 'not-allowed';
+            } else {
+                button.textContent = originalText;
+                button.disabled = false;
+                button.style.opacity = '1';
+                button.style.cursor = 'pointer';
+            }
+        }
+
         // Form Submit
         async function submitForm(event) {
             event.preventDefault();
+            clearFormMessage();
 
             const submitBtn = event.target.querySelector('button[type="submit"]');
-            const originalBtnText = submitBtn.textContent;
-            submitBtn.textContent = 'Sending...';
-            submitBtn.disabled = true;
+            const originalBtnText = 'Send Inquiry Now';
+            setSubmitButtonLoading(true, submitBtn, originalBtnText);
 
             const formData = new FormData(event.target);
             const data = Object.fromEntries(formData);
             data.products = formData.getAll('product');
 
             if (data.products.length === 0) {
-                alert('Please select at least one product interest.');
-                submitBtn.textContent = originalBtnText;
-                submitBtn.disabled = false;
+                showFormMessage('Please select at least one product interest.', false);
+                setSubmitButtonLoading(false, submitBtn, originalBtnText);
                 return;
             }
 
@@ -1198,18 +1294,16 @@
                     const text = await response.text();
                     console.error('Server error response:', text);
 
-                    // If API is not working, show friendly message and continue
+                    // If API is not available, show friendly message and redirect
                     if (response.status === 404 || text.includes('<!DOCTYPE') || text.includes('<html')) {
                         console.warn('API not available, using fallback');
-                        alert('感谢您的咨询！我们会尽快联系您。\n\nThank you for your inquiry! We will contact you soon.');
-
-                        // Trigger Google Ads Conversion
-                        if (typeof reportConversion === 'function') {
-                            reportConversion();
-                        }
-
-                        // Redirect to Thank You page
-                        window.location.href = 'thank-you.html';
+                        showFormMessage('Thank you! Redirecting...', true);
+                        setTimeout(() => {
+                            if (typeof reportConversion === 'function') {
+                                reportConversion();
+                            }
+                            window.location.href = 'thank-you.html';
+                        }, 1000);
                         return;
                     }
 
@@ -1223,43 +1317,48 @@
                     throw new Error(result.error || 'Failed to submit inquiry');
                 }
 
-                // Trigger Google Ads Conversion
-                if (typeof reportConversion === 'function') {
-                    reportConversion();
-                }
-
-                // Redirect to Thank You page
-                window.location.href = 'thank-you.html';
+                // Show success message before redirect
+                showFormMessage('Success! Redirecting...', true);
+                setTimeout(() => {
+                    if (typeof reportConversion === 'function') {
+                        reportConversion();
+                    }
+                    window.location.href = 'thank-you.html';
+                }, 500);
 
             } catch (error) {
                 console.error('Error submitting form:', error);
 
-                // Fallback: Show friendly message and continue
-                alert('感谢您的咨询！我们会尽快联系您。\n\nThank you for your inquiry! We will contact you soon.\n\n(Error: ' + error.message + ')');
-
-                // Trigger Google Ads Conversion
-                if (typeof reportConversion === 'function') {
-                    reportConversion();
-                }
-
-                // Still redirect to Thank You page
-                window.location.href = 'thank-you.html';
+                // Fallback: Show friendly message and redirect
+                showFormMessage('Thank you for your inquiry! We will contact you soon.', true);
+                setTimeout(() => {
+                    if (typeof reportConversion === 'function') {
+                        reportConversion();
+                    }
+                    window.location.href = 'thank-you.html';
+                }, 1500);
             }
         }
 
         // Smooth scroll for anchor links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
+        (function() {
+            const anchors = document.querySelectorAll('a[href^="#"]');
+            anchors.forEach(function(anchor) {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const href = anchor.getAttribute('href');
+                    if (href && href !== '#') {
+                        const target = document.querySelector(href);
+                        if (target) {
+                            target.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'start'
+                            });
+                        }
+                    }
+                });
             });
-        });
+        })();
     </script>
 </body>
 </html>
