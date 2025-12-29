@@ -265,28 +265,49 @@ module.exports = async (req, res) => {
         `;
 
         console.log('Sending email via Resend API...');
+        console.log('FROM_EMAIL:', FROM_EMAIL);
+        console.log('TO_EMAIL:', TO_EMAIL);
+        console.log('RESEND_API_KEY (first 10 chars):', RESEND_API_KEY ? RESEND_API_KEY.substring(0, 10) + '...' : 'NOT SET');
 
         // Send email via Resend API
+        // Use simple from format for resend.dev domains, formatted for custom domains
+        const fromEmail = FROM_EMAIL.includes('resend.dev')
+            ? FROM_EMAIL
+            : `Motor Run Capacitor <${FROM_EMAIL}>`;
+
+        console.log('Using fromEmail:', fromEmail);
+
+        const emailPayload = {
+            from: fromEmail,
+            to: [TO_EMAIL],
+            subject: `New Inquiry: ${sanitizedName} from ${sanitizedCompany}`,
+            html: emailHTML,
+            reply_to: sanitizedEmail
+        };
+
+        console.log('Email payload:', JSON.stringify(emailPayload, null, 2));
+
         const resendResponse = await fetch('https://api.resend.com/emails', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${RESEND_API_KEY}`,
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                from: `Motor Run Capacitor <${FROM_EMAIL}>`,
-                to: [TO_EMAIL],
-                subject: `New Inquiry: ${sanitizedName} from ${sanitizedCompany}`,
-                html: emailHTML,
-                reply_to: sanitizedEmail
-            }),
+            body: JSON.stringify(emailPayload),
         });
 
         console.log('Resend response status:', resendResponse.status);
+        console.log('Resend response headers:', JSON.stringify(Object.fromEntries(resendResponse.headers.entries()), null, 2));
 
         if (!resendResponse.ok) {
             const errorText = await resendResponse.text();
-            console.error('Resend API Error:', errorText);
+            const errorJson = await resendResponse.json().catch(() => null);
+            console.error('=== RESEND API ERROR ===');
+            console.error('Status:', resendResponse.status);
+            console.error('Status Text:', resendResponse.statusText);
+            console.error('Response Body (text):', errorText);
+            console.error('Response Body (json):', errorJson);
+            console.error('========================');
             // Don't expose internal error details to client
             throw new Error('Failed to send email');
         }
