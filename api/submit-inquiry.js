@@ -147,6 +147,7 @@ module.exports = async (req, res) => {
 
     try {
         console.log('Received form submission');
+        console.log('Request body:', JSON.stringify(req.body, null, 2));
 
         const { name, company, email, country, products, message } = req.body;
 
@@ -157,6 +158,16 @@ module.exports = async (req, res) => {
         const sanitizedCountry = Validator.validateCountry(country);
         const sanitizedProducts = Validator.validateProducts(products);
         const sanitizedMessage = Validator.validateMessage(message);
+
+        // Log validation results for debugging
+        console.log('=== VALIDATION RESULTS ===');
+        console.log('name:', name, '->', sanitizedName ? '✅ VALID' : '❌ INVALID');
+        console.log('company:', company, '->', sanitizedCompany ? '✅ VALID' : '❌ INVALID');
+        console.log('email:', email, '->', sanitizedEmail ? '✅ VALID' : '❌ INVALID');
+        console.log('country:', country, '->', sanitizedCountry ? '✅ VALID' : '❌ INVALID');
+        console.log('products:', products, '->', sanitizedProducts ? '✅ VALID' : '❌ INVALID');
+        console.log('message:', message, '->', sanitizedMessage ? '✅ VALID' : '❌ INVALID');
+        console.log('==========================');
 
         // Check validation results
         if (!sanitizedName) {
@@ -264,10 +275,14 @@ module.exports = async (req, res) => {
             </html>
         `;
 
-        console.log('Sending email via Resend API...');
+        console.log('=== SENDING EMAIL ===');
         console.log('FROM_EMAIL:', FROM_EMAIL);
         console.log('TO_EMAIL:', TO_EMAIL);
         console.log('RESEND_API_KEY (first 10 chars):', RESEND_API_KEY ? RESEND_API_KEY.substring(0, 10) + '...' : 'NOT SET');
+        console.log('sanitizedName:', sanitizedName);
+        console.log('sanitizedEmail:', sanitizedEmail);
+        console.log('sanitizedCountry:', sanitizedCountry);
+        console.log('sanitizedCompany:', sanitizedCompany);
 
         // Send email via Resend API
         // Use simple from format for resend.dev domains, formatted for custom domains
@@ -308,12 +323,18 @@ module.exports = async (req, res) => {
             console.error('Response Body (text):', errorText);
             console.error('Response Body (json):', errorJson);
             console.error('========================');
+
+            // Return more specific error for debugging
+            const errorMessage = errorJson?.message || errorText || 'Failed to send email';
+            console.error('Error detail:', errorMessage);
             // Don't expose internal error details to client
             throw new Error('Failed to send email');
         }
 
         const resendData = await resendResponse.json();
-        console.log('Email sent successfully:', resendData);
+        console.log('=== EMAIL SENT SUCCESSFULLY ===');
+        console.log('Resend Response:', resendData);
+        console.log('==============================');
 
         // Success response
         return res.status(200).json({
