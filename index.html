@@ -1279,6 +1279,8 @@
             }
 
             try {
+                console.log('Submitting form with data:', data);
+
                 // Send data to Vercel API
                 const response = await fetch('/api/submit-inquiry', {
                     method: 'POST',
@@ -1289,54 +1291,52 @@
                     body: JSON.stringify(data),
                 });
 
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+
                 // Check response status first
                 if (!response.ok) {
                     const text = await response.text();
                     console.error('Server error response:', text);
 
-                    // If API is not available, show friendly message and redirect
-                    if (response.status === 404 || text.includes('<!DOCTYPE') || text.includes('<html')) {
-                        console.warn('API not available, using fallback');
-                        showFormMessage('Thank you! Redirecting...', true);
-                        setTimeout(() => {
-                            if (typeof reportConversion === 'function') {
-                                reportConversion();
-                            }
-                            window.location.href = 'thank-you.html';
-                        }, 1000);
-                        return;
+                    // Show actual error to user
+                    let errorMsg = 'Server error. Please try again.';
+                    if (response.status === 404) {
+                        errorMsg = 'API not found. Please contact support.';
+                    } else if (response.status === 500) {
+                        errorMsg = 'Server error. Please try again later.';
+                    } else if (text.includes('<!DOCTYPE') || text.includes('<html')) {
+                        errorMsg = 'Invalid server response. Please contact support.';
                     }
 
-                    throw new Error(`Server error: ${response.status}`);
+                    showFormMessage(errorMsg, false);
+                    setSubmitButtonLoading(false, submitBtn, originalBtnText);
+                    return;
                 }
 
                 // Parse JSON response
                 const result = await response.json();
+                console.log('Response result:', result);
 
                 if (!result.success) {
                     throw new Error(result.error || 'Failed to submit inquiry');
                 }
 
                 // Show success message before redirect
-                showFormMessage('Success! Redirecting...', true);
+                showFormMessage('Inquiry submitted successfully! Redirecting...', true);
                 setTimeout(() => {
                     if (typeof reportConversion === 'function') {
                         reportConversion();
                     }
                     window.location.href = 'thank-you.html';
-                }, 500);
+                }, 1000);
 
             } catch (error) {
                 console.error('Error submitting form:', error);
 
-                // Fallback: Show friendly message and redirect
-                showFormMessage('Thank you for your inquiry! We will contact you soon.', true);
-                setTimeout(() => {
-                    if (typeof reportConversion === 'function') {
-                        reportConversion();
-                    }
-                    window.location.href = 'thank-you.html';
-                }, 1500);
+                // Show error message to user
+                showFormMessage(error.message || 'Failed to submit. Please try again.', false);
+                setSubmitButtonLoading(false, submitBtn, originalBtnText);
             }
         }
 
